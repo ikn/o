@@ -1,0 +1,22 @@
+This is a game for a 2-week competition with the theme '80 x 20 window size'.
+
+    DEPENDENCIES
+
+Python (2.6 or later 2.x)
+Pygame (1.8 or later, probably; tested with 1.9.1)
+
+    RUNNING
+
+This should work wherever Pygame does.  On systems with a sh-compatible shell,
+do
+
+    ./run
+
+On other systems (Windows, for example), run game.py with your Python 2
+executable.
+
+    LICENSING
+
+Source code is available under the GPL version 3 (included).
+
+Modules in game/ext/ have their own licenses, stated at the top of each file.

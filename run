@@ -1,0 +1,15 @@
+#! /bin/sh
+
+p=`command -v python2`
+if [ $? -ne 0 ]; then
+    p=`command -v python`
+    if [ $? -ne 0 ]; then
+        echo "error: cannot find Python 2 binary" 1>&2
+        exit 1
+    fi
+fi
+if [ "$1" = "debug" ]; then
+    "$p" "`dirname $0`/game.py" "$@"
+else
+    "$p" -O "`dirname $0`/game.py" "$@"
+fi
