@@ -12,29 +12,58 @@ def get_win_frame (root, win):
         win = parent
     return win
 
+def resolve_col (expel, keep_in, rect, vel):
+    for i in rect.collidelistall(expel):
+        e_x0, e_y0, w, h = expel[i]
+        e_x1, e_y1 = e_x0 + w, e_y0 + h
+        r_x0, r_y0, w, h = rect
+        r_x1, r_y1 = r_x0 + w, r_y0 + h
+        x, axis, dirn = min((r_x1 - e_x0, 0, -1), (r_y1 - e_y0, 1, -1),
+                            (e_x1 - r_x0, 0, 1), (e_y1 - r_y0, 1, 1))
+        rect[axis] += dirn * x
+        vel[axis] *= -1
+    for r in keep_in:
+        if not r.contains(rect):
+            k_x0, k_y0, w, h = r
+            k_x1, k_y1 = k_x0 + w, k_y0 + h
+            r_x0, r_y0, w, h = rect
+            r_x1, r_y1 = r_x0 + w, r_y0 + h
+            for x, axis, dirn in (
+                (r_x1 - k_x1, 0, -1), (r_y1 - k_y1, 1, -1),
+                (k_x0 - r_x0, 0, 1), (k_y0 - r_y0, 1, 1)
+            ):
+                if x > 0:
+                    rect[axis] += dirn * x
+                    vel[axis] *= -1
+    if rect.collidelist(expel) != -1 or any(not r.contains(rect) for r in keep_in):
+        print 'die'
 
 class Ball (object):
     def __init__ (self, level, pos):
         self.level = level
         self.last_rect = self.rect = pg.Rect(pos, conf.BALL_SIZE)
-        self.vel = conf.BALL_VEL
+        self.vel = list(conf.BALL_VEL)
 
     def update (self):
         r, v = self.rect, self.vel
-        l = pg.Rect(r)
+        self.last_rect = pg.Rect(r)
         r[0] += v[0]
         r[1] += v[1]
-        #self.rect = rects.collide(r)
-        self.last_rect = l
+        resolve_col(self.level.platforms.rects, (self.level.rect,), r, v)
 
     def draw (self, screen, offset):
         screen.fill((255, 0, 0), self.rect.move(offset))
 
 
 class Rects (object):
-    def __init__ (self, draw_type, *rects):
+    def __init__ (self, draw_type, rects):
         self.rects = [pg.Rect(r) for r in rects]
         self.colour = conf.RECT_COLOURS[draw_type]
+
+    def draw (self, screen, offset):
+        c = self.colour
+        for r in self.rects:
+            screen.fill(c, r.move(offset))
 
 
 class Level (object):
@@ -70,8 +99,15 @@ class Level (object):
         pos = data['pos']
         self.set_pos(pos)
         self.update_pos()
+        # wait for up to a second for window to move to starting position
+        for i in xrange(50):
+            if self.pos == pos:
+                break
+            pg.time.wait(20)
+            self.update_pos()
         # objects
         self.ball = Ball(self, data['ball'])
+        self.platforms = Rects('platform', data['platforms'])
 
     def set_pos (self, pos):
         dx1, dy1 = self.border_offset
@@ -83,12 +119,15 @@ class Level (object):
         x, y = self.tl
         geom = self.x_window.get_geometry()
         self.pos = (geom.x - x, geom.y - y)
+        self.rect = pg.Rect(self.pos, conf.RES)
 
     def update (self):
+        # screen position
         old_pos = self.pos
         self.update_pos()
         if old_pos != self.pos:
             self.dirty = True
+        # ball position
         self.ball.update()
 
     def draw (self, screen):
@@ -99,9 +138,11 @@ class Level (object):
             self.dirty = False
             screen.fill((255, 255, 255))
             rtn = True
+            # rects
+            self.platforms.draw(screen, offset)
         else:
             # background
-            r = b.last_rect.union(b.rect)
+            r = b.last_rect.union(b.rect).move(offset)
             screen.fill((255, 255, 255), r)
             rtn = r
         # ball
