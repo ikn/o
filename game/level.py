@@ -81,7 +81,11 @@ class Level (object):
             pg.time.wait(20)
             self.update_pos()
         # objects
+        sz = conf.GOAL_SIZE
+        self.goals = [pg.Rect(pos, sz) for pos in data['goals']]
         self.balls = [Ball(self, pos, vel) for pos, vel in data['balls']]
+        if conf.DEBUG and len(self.goals) != len(self.balls):
+            print 'warning: {} goals, {} balls'.format(len(self.goals), len(self.balls))
         self.platforms = Rects('platform', data['platforms'])
 
     def reset (self):
@@ -89,6 +93,13 @@ class Level (object):
         # containing balls in red, then call init once window contains this
         # rect
         pass
+
+    def progress (self):
+        self.ident += 1
+        if self.ident >= len(conf.LEVELS):
+            self.game.quit_backend()
+        else:
+            self.init()
 
     def set_pos (self, pos):
         dx1, dy1 = self.border_offset
@@ -109,9 +120,11 @@ class Level (object):
             vel = b.vel
             expel = tuple(self.platforms.rects)
             expel_types = [None] * len(expel)
-            b_types, b_rects = zip(*((this_b, this_b.rect) for this_b in bs if this_b is not b))
-            expel_types += b_types
-            expel += b_rects
+            b_data = [(this_b, this_b.rect) for this_b in bs if this_b is not b]
+            if b_data:
+                b_types, b_rects = zip(*b_data)
+                expel_types += b_types
+                expel += b_rects
             for i in rect.collidelistall(expel):
                 e_x0, e_y0, w, h = expel[i]
                 e_x1, e_y1 = e_x0 + w, e_y0 + h
@@ -151,6 +164,15 @@ class Level (object):
         for b in self.balls:
             b.update()
         self.resolve_cols()
+        # win condition
+        for b in self.balls:
+            col = b.rect.collidelistall(self.goals)
+            if col:
+                self.goals.pop(col.pop(0))
+                self.balls.remove(b)
+                self.dirty = True
+                if not self.goals:
+                    self.progress()
 
     def draw (self, screen):
         offset = (-self.pos[0], -self.pos[1])
@@ -160,6 +182,9 @@ class Level (object):
             screen.fill((0, 0, 0))
             screen.fill((255, 255, 255), self.rect.move(offset))
             rtn = True
+            # goals
+            for r in self.goals:
+                screen.fill((255, 150, 0), r.move(offset))
             # rects
             self.platforms.draw(screen, offset)
         else:
@@ -169,7 +194,7 @@ class Level (object):
                 r = b.last_rect.union(b.rect).move(offset)
                 screen.fill((255, 255, 255), r)
                 rtn.append(r)
-        # ball
+        # balls
         for b in self.balls:
             b.draw(screen, offset)
         return rtn

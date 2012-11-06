@@ -12,7 +12,7 @@ from util import dd
 
 class Conf (object):
 
-    IDENT = 'game'
+    IDENT = 'o'
     USE_SAVEDATA = False
     USE_FONTS = False
 
@@ -46,7 +46,7 @@ class Conf (object):
 
     # display
     WINDOW_ICON = None #IMG_DIR + 'icon.png'
-    WINDOW_TITLE = 'drag me'
+    WINDOW_TITLE = 'o'
     MOUSE_VISIBLE = dd(True) # per-backend
     FLAGS = 0
     FULLSCREEN = False
@@ -61,6 +61,7 @@ class Conf (object):
     FPS = dd(60) # per-backend
 
     # debug
+    DEBUG = False
     PROFILE_STATS_FILE = '.profile_stats'
     DEFAULT_PROFILE_TIME = 5
 
@@ -105,12 +106,15 @@ class Conf (object):
 
     # gameplay
     BALL_SIZE = (5, 5)
+    GOAL_SIZE = (10, 10)
 
     # levels
+    # pos: of screen top-left
+    # balls: each is (pos, vel)
     LEVELS = [{
         'size': (500, 400),
         'pos': (0, 0),
-        # each is (pos, vel)
+        'goals': [(450, 200), (300, 200)],
         'balls': [((0, 0), (1, -1)), ((50, 10), (-1, 1))],
         'platforms': [(50, 50, 50, 50), (60, 100, 20, 80)]
     }]

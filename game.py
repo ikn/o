@@ -737,6 +737,8 @@ if __name__ == '__main__':
         Stats(fn).strip_dirs().sort_stats('cumulative').print_stats(20)
         os.unlink(fn)
     else:
+        if len(argv) >= 2 and argv[1] == 'dbg':
+            conf.DEBUG = True
         # run normally
         restarting = True
         while restarting:
