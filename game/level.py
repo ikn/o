@@ -87,6 +87,7 @@ class Level (object):
         if conf.DEBUG and len(self.goals) != len(self.balls):
             print 'warning: {} goals, {} balls'.format(len(self.goals), len(self.balls))
         self.platforms = Rects('platform', data['platforms'])
+        self.spikes = Rects('spikes', data['spikes'])
 
     def reset (self):
         # TODO: add arrow pointing towards starting position and smallest rect
@@ -151,7 +152,7 @@ class Level (object):
                         if x > 0:
                             rect[axis] += dirn * x
                             vel[axis] *= -1
-            if rect.collidelist(expel) != -1 or any(not r.contains(rect) for r in keep_in):
+            if rect.collidelist(expel) != -1 or any(not r.contains(rect) for r in keep_in) or rect.collidelist(self.spikes.rects) != -1:
                 self.reset()
 
     def update (self):
@@ -185,7 +186,9 @@ class Level (object):
             # goals
             for r in self.goals:
                 screen.fill((255, 150, 0), r.move(offset))
-            # rects
+            # spikes
+            self.spikes.draw(screen, offset)
+            # platforms
             self.platforms.draw(screen, offset)
         else:
             # background

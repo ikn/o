@@ -102,7 +102,7 @@ class Conf (object):
     REQUIRED_FONTS = dd({})
 
     # graphics
-    RECT_COLOURS = dd((0, 0, 0))
+    RECT_COLOURS = {'platform': (0, 0, 0), 'spikes': (255, 0, 0)}
 
     # gameplay
     BALL_SIZE = (5, 5)
@@ -116,7 +116,8 @@ class Conf (object):
         'pos': (0, 0),
         'goals': [(450, 200), (300, 200)],
         'balls': [((0, 0), (1, -1)), ((50, 10), (-1, 1))],
-        'platforms': [(50, 50, 50, 50), (60, 100, 20, 80)]
+        'platforms': [(50, 50, 50, 50), (60, 100, 20, 80)],
+        'spikes': [(50, 45, 50, 5)]
     }]
 
 
