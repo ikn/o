@@ -1,19 +1,30 @@
-This is a game for a 2-week competition with the theme '80 x 20 window size'.
+o is a game where you move a window around to get balls where you want.  I made
+it for a 2-week competition with the theme '80x20 window size'.
 
     DEPENDENCIES
 
 Python (2.6 or later 2.x)
 Pygame (1.8 or later, probably; tested with 1.9.1)
+python-xlib (tested with 0.15rc1)
 
     RUNNING
 
-This should work wherever Pygame does.  On systems with a sh-compatible shell,
-do
+This works only on systems using X11 and supported by Pygame.  On systems with
+a sh-compatible shell, do
 
     ./run
 
-On other systems (Windows, for example), run game.py with your Python 2
-executable.
+On other supported systems, run game.py with your Python 2 executable.
+
+For this game to work properly, your window manager must support floating
+windows, allow windows to be as small as 20x20, and let you move windows as
+small as this.
+
+    PLAYING
+
+To play the game, move the window it displays around the screen so that the
+bouncing ball(s) reach their goals.  If a ball is destroyed in any way, you
+must move the window to the indicated position to try again.
 
     LICENSING
 

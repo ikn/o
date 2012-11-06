@@ -105,13 +105,13 @@ class Conf (object):
 
     # gameplay
     BALL_SIZE = (5, 5)
-    BALL_VEL = (1, 1)
 
     # levels
     LEVELS = [{
         'size': (500, 400),
         'pos': (0, 0),
-        'ball': (0, 0),
+        # each is (pos, vel)
+        'balls': [((0, 0), (1, -1)), ((50, 10), (-1, 1))],
         'platforms': [(50, 50, 50, 50), (60, 100, 20, 80)]
     }]
 
