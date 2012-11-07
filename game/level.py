@@ -1,3 +1,5 @@
+from math import atan2, pi
+
 import Xlib.display
 import pygame as pg
 
@@ -56,6 +58,8 @@ class Level (object):
         y = h / 2 - wh / 2
         self.border_offset = (0, 0)
         self.tl = (0, 0)
+        self.update_pos()
+        x, y = self.pos
         self.set_pos((x, y))
         self.update_pos()
         dx, dy = self.border_offset = (x - self.pos[0], y - self.pos[1])
@@ -64,22 +68,14 @@ class Level (object):
 
     def init (self):
         self.dirty = True
+        self.resetting = True
+        self.balls = []
         data = conf.LEVELS[self.ident]
         # centre level on the screen
         w, h = conf.RES_F
         sx, sy = data['size']
         self.tl = ((w - sx) / 2, (h - sy) / 2)
         self.rect = pg.Rect(0, 0, sx, sy)
-        # window position
-        pos = data['pos']
-        self.set_pos(pos)
-        self.update_pos()
-        # wait for up to a second for window to move to starting position
-        for i in xrange(50):
-            if self.pos == pos:
-                break
-            pg.time.wait(20)
-            self.update_pos()
         # objects
         sz = conf.GOAL_SIZE
         self.goals = [pg.Rect(pos, sz) for pos in data['goals']]
@@ -88,12 +84,9 @@ class Level (object):
             print 'warning: {} goals, {} balls'.format(len(self.goals), len(self.balls))
         self.platforms = Rects('platform', data['platforms'])
         self.spikes = Rects('spikes', data['spikes'])
-
-    def reset (self):
-        # TODO: add arrow pointing towards starting position and smallest rect
-        # containing balls in red, then call init once window contains this
-        # rect
-        pass
+        # indicate to move to start position
+        rects = [b.rect for b in self.balls]
+        self.reset_rect = rects[0].unionall(rects[1:])
 
     def progress (self):
         self.ident += 1
@@ -153,7 +146,7 @@ class Level (object):
                             rect[axis] += dirn * x
                             vel[axis] *= -1
             if rect.collidelist(expel) != -1 or any(not r.contains(rect) for r in keep_in) or rect.collidelist(self.spikes.rects) != -1:
-                self.reset()
+                self.init()
 
     def update (self):
         # screen position
@@ -161,28 +154,32 @@ class Level (object):
         self.update_pos()
         if old_pos != self.pos:
             self.dirty = True
-        # ball position
-        for b in self.balls:
-            b.update()
-        self.resolve_cols()
-        # win condition
-        for b in self.balls:
-            col = b.rect.collidelistall(self.goals)
-            if col:
-                self.goals.pop(col.pop(0))
-                self.balls.remove(b)
-                self.dirty = True
-                if not self.goals:
-                    self.progress()
+        if self.resetting:
+            if self.win_rect.contains(self.reset_rect):
+                self.resetting = False
+        else:
+            # ball position
+            for b in self.balls:
+                b.update()
+            self.resolve_cols()
+            # win condition
+            for b in self.balls:
+                col = b.rect.collidelistall(self.goals)
+                if col:
+                    self.goals.pop(col.pop(0))
+                    self.balls.remove(b)
+                    self.dirty = True
+                    if not self.goals:
+                        self.progress()
 
     def draw (self, screen):
         offset = (-self.pos[0], -self.pos[1])
         if self.dirty:
-            # background
             self.dirty = False
+            rtn = True
+            # background
             screen.fill((0, 0, 0))
             screen.fill((255, 255, 255), self.rect.move(offset))
-            rtn = True
             # goals
             for r in self.goals:
                 screen.fill((255, 150, 0), r.move(offset))
@@ -190,6 +187,27 @@ class Level (object):
             self.spikes.draw(screen, offset)
             # platforms
             self.platforms.draw(screen, offset)
+            if self.resetting:
+                w = self.win_rect
+                r = self.reset_rect
+                if w.colliderect(r):
+                    # target rect
+                    screen.fill((255, 0, 0), self.reset_rect.move(offset))
+                else:
+                    # arrow
+                    rx, ry = r.center
+                    wx, wy = w.center
+                    x, y, ww, wh = w
+                    dx = rx - wx
+                    dy = ry - wy
+                    angle = -atan2(dy, dx) * 180 / pi - 90
+                    img = pg.transform.rotozoom(self.game.img('arrow.png'), angle, 1)
+                    sx, sy = img.get_size()
+                    d = dx * dx + dy * dy
+                    dx = ir(float(ww - sx) * dx / d ** .5)
+                    dy =  ir(float(wh - sy) * dy / d ** .5)
+                    pos = ((ww + dx - sx) / 2, (wh + dy - sy) / 2)
+                    screen.blit(img, pos)
         else:
             # background
             rtn = []

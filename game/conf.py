@@ -51,7 +51,7 @@ class Conf (object):
     FLAGS = 0
     FULLSCREEN = False
     RESIZABLE = True # also determines whether fullscreen togglable
-    RES_W = (80, 20)
+    RES_W = (80, 60)
     RES_F = pg.display.list_modes()[0]
     RES = RES_W
     MIN_RES_W = (20, 20)
@@ -117,7 +117,7 @@ class Conf (object):
         'goals': [(450, 200), (300, 200)],
         'balls': [((0, 0), (1, -1)), ((50, 10), (-1, 1))],
         'platforms': [(50, 50, 50, 50), (60, 100, 20, 80)],
-        'spikes': [(50, 45, 50, 5)]
+        'spikes': [(100, 50, 5, 50)]
     }]
 
 
