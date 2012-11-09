@@ -54,7 +54,7 @@ class Conf (object):
     RES_W = (80, 60)
     RES_F = pg.display.list_modes()[0]
     RES = RES_W
-    MIN_RES_W = (20, 20)
+    MIN_RES_W = (40, 40)
     ASPECT_RATIO = None
 
     # timing

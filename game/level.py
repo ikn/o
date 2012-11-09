@@ -101,11 +101,13 @@ class Level (object):
         self.x_window.configure(x = pos[0] + dx1 + dx2, y = pos[1] + dy1 + dy2)
         self.x_display.flush()
 
-    def update_pos (self):
-        x, y = self.tl
-        geom = self.x_window.get_geometry()
-        self.pos = (geom.x - x, geom.y - y)
-        self.win_rect = pg.Rect(self.pos, conf.RES)
+    def update_pos (self, pos = None):
+        if pos is None:
+            x, y = self.tl
+            geom = self.x_window.get_geometry()
+            pos = (geom.x - x, geom.y - y)
+        self.pos = tuple(pos)
+        self.win_rect = pg.Rect(pos, conf.RES)
 
     def resolve_cols (self):
         bs = self.balls
@@ -113,6 +115,7 @@ class Level (object):
             rect = b.rect
             vel = b.vel
             expel = tuple(self.platforms.rects)
+            orig_expel = list(expel)
             expel_types = [None] * len(expel)
             b_data = [(this_b, this_b.rect) for this_b in bs if this_b is not b]
             if b_data:
@@ -145,14 +148,19 @@ class Level (object):
                         if x > 0:
                             rect[axis] += dirn * x
                             vel[axis] *= -1
-            if rect.collidelist(expel) != -1 or any(not r.contains(rect) for r in keep_in) or rect.collidelist(self.spikes.rects) != -1:
+            success = True
+            if rect.collidelist(orig_expel) != -1 or any(not r.contains(rect) for r in keep_in) or rect.collidelist(self.spikes.rects) != -1:
                 self.init()
+                success = False
+        return success
 
     def update (self):
         # screen position
         old_pos = self.pos
+        old_res = self.win_rect.size
         self.update_pos()
-        if old_pos != self.pos:
+        pos = self.pos
+        if old_pos != pos:
             self.dirty = True
         if self.resetting:
             if self.win_rect.contains(self.reset_rect):
@@ -161,7 +169,52 @@ class Level (object):
             # ball position
             for b in self.balls:
                 b.update()
-            self.resolve_cols()
+            res = self.win_rect.size
+            if old_pos == pos and old_res == res:
+                if not self.resolve_cols():
+                    return
+            else:
+                new_res = conf.RES
+                conf.RES = old_res
+                # move window one pixel at a time
+                move = [pos[0] - old_pos[0], pos[1] - old_pos[1]]
+                dirn = [1 if x > 0 else -1 for x in move]
+                move = [abs(x) for x in move]
+                ratio = None if move[0] == 0 else (float(move[1]) / move[0])
+                pos = list(old_pos)
+                while move != [0, 0]:
+                    r = None if move[0] == 0 else (float(move[1]) / move[0])
+                    if r == ratio:
+                        axis = move[1] > move[0]
+                    else:
+                        axis = r is None or r > ratio
+                    move[axis] -= 1
+                    pos[axis] += dirn[axis]
+                    self.update_pos(pos)
+                    if not self.resolve_cols():
+                        conf.RES = new_res
+                        self.update_pos()
+                        return
+                # resize window one pixel at a time
+                move = [res[0] - old_res[0], res[1] - old_res[1]]
+                dirn = [1 if x > 0 else -1 for x in move]
+                move = [abs(x) for x in move]
+                ratio = None if move[0] == 0 else (float(move[1]) / move[0])
+                res = list(old_res)
+                while move != [0, 0]:
+                    r = None if move[0] == 0 else (float(move[1]) / move[0])
+                    if r == ratio:
+                        axis = move[1] > move[0]
+                    else:
+                        axis = r is None or r > ratio
+                    move[axis] -= 1
+                    res[axis] += dirn[axis]
+                    conf.RES = res
+                    self.update_pos(pos)
+                    if not self.resolve_cols():
+                        conf.RES = new_res
+                        self.update_pos()
+                        return
             # win condition
             for b in self.balls:
                 col = b.rect.collidelistall(self.goals)
