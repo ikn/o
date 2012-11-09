@@ -737,12 +737,16 @@ if __name__ == '__main__':
         Stats(fn).strip_dirs().sort_stats('cumulative').print_stats(20)
         os.unlink(fn)
     else:
-        if len(argv) >= 2 and argv[1] == 'dbg':
-            conf.DEBUG = True
+        level = 0
+        if len(argv) >= 2:
+            if argv[1] == 'dbg':
+                conf.DEBUG = True
+            elif argv[1].isdigit():
+                level = int(argv[1])
         # run normally
         restarting = True
         while restarting:
             restarting = False
-            Game(Level).run()
+            Game(Level, level).run()
 
 pg.quit()
