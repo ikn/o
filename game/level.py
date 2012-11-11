@@ -28,7 +28,8 @@ class Ball (object):
         r[1] += v[1]
 
     def draw (self, screen, offset):
-        screen.fill((0, 0, 255), self.rect.move(offset))
+        screen.fill(conf.BALL_COLOUR, self.rect.move(offset))
+        #screen.blit(self.level.game.img('ball.png'), self.rect.move(offset))
 
 
 class Rects (object):
@@ -164,6 +165,7 @@ class Level (object):
             self.dirty = True
         if self.resetting:
             if self.win_rect.contains(self.reset_rect):
+                self.dirty = True
                 self.resetting = False
         else:
             # ball position
@@ -231,11 +233,12 @@ class Level (object):
             self.dirty = False
             rtn = True
             # background
-            screen.fill((0, 0, 0))
-            screen.fill((255, 255, 255), self.rect.move(offset))
+            screen.fill(conf.SOLID_COLOUR)
+            screen.fill(conf.BG_COLOUR, self.rect.move(offset))
             # goals
             for r in self.goals:
-                screen.fill((255, 150, 0), r.move(offset))
+                screen.fill(conf.GOAL_COLOUR, r.move(offset))
+                #screen.blit(self.game.img('goal.png'), r.move(offset))
             # spikes
             self.spikes.draw(screen, offset)
             # platforms
@@ -245,11 +248,14 @@ class Level (object):
                 r = self.reset_rect
                 if w.colliderect(r):
                     # target rect
-                    screen.fill((255, 0, 0), self.reset_rect.move(offset))
+                    t = self.reset_rect.move(offset)
+                    screen.fill(conf.START_RECT_BORDER_COLOUR, t)
+                    b = conf.START_RECT_BORDER_WIDTH
+                    screen.fill(conf.START_RECT_COLOUR, t.inflate(-2 * b, -2 * b))
                 else:
                     # arrow
-                    rx, ry = r.center
                     wx, wy = w.center
+                    rx, ry = r.center
                     x, y, ww, wh = w
                     dx = rx - wx
                     dy = ry - wy
@@ -261,13 +267,15 @@ class Level (object):
                     dy =  ir(float(wh - sy) * dy / d ** .5)
                     pos = ((ww + dx - sx) / 2, (wh + dy - sy) / 2)
                     screen.blit(img, pos)
-        else:
+        elif not self.resetting:
             # background
             rtn = []
             for b in self.balls:
                 r = b.last_rect.union(b.rect).move(offset)
-                screen.fill((255, 255, 255), r)
+                screen.fill(conf.BG_COLOUR, r)
                 rtn.append(r)
+        else:
+            rtn = False
         # balls
         for b in self.balls:
             b.draw(screen, offset)

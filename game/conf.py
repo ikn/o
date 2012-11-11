@@ -102,7 +102,14 @@ class Conf (object):
     REQUIRED_FONTS = dd({})
 
     # graphics
-    RECT_COLOURS = {'platform': (0, 0, 0), 'spikes': (255, 0, 0)}
+    BG_COLOUR = (255, 255, 220)
+    SOLID_COLOUR = (10, 10, 10)
+    RECT_COLOURS = {'platform': SOLID_COLOUR, 'spikes': (170, 40, 40)}
+    BALL_COLOUR = (80, 30, 80)
+    GOAL_COLOUR = (230, 120, 50)
+    START_RECT_COLOUR = (230, 230, 120)
+    START_RECT_BORDER_COLOUR = (190, 190, 90)
+    START_RECT_BORDER_WIDTH = 1
 
     # gameplay
     BALL_SIZE = (8, 8)
@@ -149,6 +156,15 @@ class Conf (object):
             (165, 30, 5, 25), (165, 100, 5, 25), (220, 0, 5, 70),
             (220, 85, 5, 70), (300, 50, 5, 55), (595, 0, 5, 155)
         ]
+    },
+    # TODO: introduce multiple balls
+    {
+        'size': (400, 300),
+        'goals': [(30, 250), (354, 250)],
+        'balls': [((170, 50), (-1, -1)), ((222, 50), (-1, 1))],
+        'platforms': [
+            (190, 0, 20, 300), (50, 140, 140, 15), (210, 140, 140, 15)
+        ], 'spikes': [(50, 155, 140, 5), (210, 155, 140, 5)]
     }]
 
 
