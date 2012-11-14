@@ -23,9 +23,11 @@ class Ball (object):
         self.squish_vel = [0] * 4
         self.squish = [0] * 4
 
-    def push (self, axis, dirn):
+    def push (self, axis, dirn, other_ball):
         v = self.vel
         self.squish_vel[axis + dirn + 1] += conf.BALL_SQUISH
+        if v[axis] and (v[axis] > 0) == (dirn == -1):
+            self.level.game.play_snd('bounce')
         v[axis] = dirn * abs(v[axis])
 
     def move (self, axis, x):
@@ -155,10 +157,10 @@ class Level (object):
                 x, axis, dirn = min((r_x1 - e_x0, 0, -1), (r_y1 - e_y0, 1, -1),
                                     (e_x1 - r_x0, 0, 1), (e_y1 - r_y0, 1, 1))
                 b.move(axis, dirn * x)
-                b.push(axis, dirn)
                 other_b = expel_types[i]
+                b.push(axis, dirn, other_b is not None)
                 if other_b is not None:
-                    other_b.push(axis, -dirn)
+                    other_b.push(axis, -dirn, True)
             keep_in = (self.win_rect, self.rect)
             for r in keep_in:
                 if not r.contains(rect):
@@ -172,9 +174,10 @@ class Level (object):
                     ):
                         if x > 0:
                             b.move(axis, dirn * x)
-                            b.push(axis, dirn)
+                            b.push(axis, dirn, False)
             success = True
             if rect.collidelist(orig_expel) != -1 or any(not r.contains(rect) for r in keep_in) or rect.collidelist(self.spikes.rects) != -1:
+                self.game.play_snd('die')
                 self.init()
                 success = False
         return success
@@ -248,6 +251,7 @@ class Level (object):
                     self.goals.pop(col.pop(0))
                     self.balls.remove(b)
                     self.dirty = True
+                    self.game.play_snd('goal')
                     if not self.goals:
                         self.progress()
 
