@@ -18,18 +18,54 @@ def get_win_frame (root, win):
 class Ball (object):
     def __init__ (self, level, pos, vel):
         self.level = level
-        self.last_rect = self.rect = pg.Rect(pos, conf.BALL_SIZE)
+        self.rect = self.last_rect = self.orig_rect = pg.Rect(pos, conf.BALL_SIZE)
         self.vel = list(vel)
+        self.squish_vel = [0] * 4
+        self.squish = [0] * 4
+
+    def push (self, axis, dirn):
+        v = self.vel
+        self.squish_vel[axis + dirn + 1] += conf.BALL_SQUISH
+        v[axis] = dirn * abs(v[axis])
+
+    def move (self, axis, x):
+        self.orig_rect[axis] += x
+        self.rect[axis] += x
 
     def update (self):
-        r, v = self.rect, self.vel
-        self.last_rect = pg.Rect(r)
+        # move
+        r, v = self.orig_rect, self.vel
         r[0] += v[0]
         r[1] += v[1]
+        # squish
+        s = self.squish
+        sv = self.squish_vel
+        e = conf.BALL_ELAST
+        k = conf.BALL_STIFFNESS
+        m = conf.MAX_SQUISH
+        for i in xrange(4):
+            sv[i] *= e
+            sv[i] -= k * s[i]
+            s[i] += sv[i]
+            s[i] = min(s[i], m)
+        # update rect
+        r = list(r)
+        for i, dx in enumerate(self.squish):
+            if i < 2:
+                r[i] += dx
+            r[2 + (i % 2)] -= dx
+        r = pg.Rect([ir(x) for x in r])
+        self.rect = r
+
+    def pre_draw (self):
+        l = self.last_rect
+        self.last_rect = self.rect
+        #print l, self.rect
+        #print self.level.platforms.rects
+        return l.union(self.rect)
 
     def draw (self, screen, offset):
         screen.fill(conf.BALL_COLOUR, self.rect.move(offset))
-        #screen.blit(self.level.game.img('ball.png'), self.rect.move(offset))
 
 
 class Rects (object):
@@ -57,13 +93,8 @@ class Level (object):
         ww, wh = conf.RES
         x = w / 2 - ww / 2
         y = h / 2 - wh / 2
-        self.border_offset = (0, 0)
         self.tl = (0, 0)
         self.update_pos()
-        x, y = self.pos
-        self.set_pos((x, y))
-        self.update_pos()
-        dx, dy = self.border_offset = (x - self.pos[0], y - self.pos[1])
         # load first level
         self.init()
 
@@ -96,12 +127,6 @@ class Level (object):
         else:
             self.init()
 
-    def set_pos (self, pos):
-        dx1, dy1 = self.border_offset
-        dx2, dy2 = self.tl
-        self.x_window.configure(x = pos[0] + dx1 + dx2, y = pos[1] + dy1 + dy2)
-        self.x_display.flush()
-
     def update_pos (self, pos = None):
         if pos is None:
             x, y = self.tl
@@ -114,7 +139,6 @@ class Level (object):
         bs = self.balls
         for b in bs:
             rect = b.rect
-            vel = b.vel
             expel = tuple(self.platforms.rects)
             orig_expel = list(expel)
             expel_types = [None] * len(expel)
@@ -130,11 +154,11 @@ class Level (object):
                 r_x1, r_y1 = r_x0 + w, r_y0 + h
                 x, axis, dirn = min((r_x1 - e_x0, 0, -1), (r_y1 - e_y0, 1, -1),
                                     (e_x1 - r_x0, 0, 1), (e_y1 - r_y0, 1, 1))
-                rect[axis] += dirn * x
-                vel[axis] *= -1
+                b.move(axis, dirn * x)
+                b.push(axis, dirn)
                 other_b = expel_types[i]
                 if other_b is not None:
-                    other_b.vel[axis] *= -1
+                    other_b.push(axis, -dirn)
             keep_in = (self.win_rect, self.rect)
             for r in keep_in:
                 if not r.contains(rect):
@@ -147,8 +171,8 @@ class Level (object):
                         (k_x0 - r_x0, 0, 1), (k_y0 - r_y0, 1, 1)
                     ):
                         if x > 0:
-                            rect[axis] += dirn * x
-                            vel[axis] *= -1
+                            b.move(axis, dirn * x)
+                            b.push(axis, dirn)
             success = True
             if rect.collidelist(orig_expel) != -1 or any(not r.contains(rect) for r in keep_in) or rect.collidelist(self.spikes.rects) != -1:
                 self.init()
@@ -238,7 +262,6 @@ class Level (object):
             # goals
             for r in self.goals:
                 screen.fill(conf.GOAL_COLOUR, r.move(offset))
-                #screen.blit(self.game.img('goal.png'), r.move(offset))
             # spikes
             self.spikes.draw(screen, offset)
             # platforms
@@ -267,16 +290,22 @@ class Level (object):
                     dy =  ir(float(wh - sy) * dy / d ** .5)
                     pos = ((ww + dx - sx) / 2, (wh + dy - sy) / 2)
                     screen.blit(img, pos)
+            for b in self.balls:
+                b.pre_draw()
+            # balls
+            for b in self.balls:
+                b.draw(screen, offset)
         elif not self.resetting:
             # background
             rtn = []
             for b in self.balls:
-                r = b.last_rect.union(b.rect).move(offset)
+                r = b.pre_draw()
+                r.move_ip(offset)
                 screen.fill(conf.BG_COLOUR, r)
                 rtn.append(r)
+            # balls
+            for b in self.balls:
+                b.draw(screen, offset)
         else:
             rtn = False
-        # balls
-        for b in self.balls:
-            b.draw(screen, offset)
         return rtn
