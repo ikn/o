@@ -1,5 +1,5 @@
-o is a game where you move a window around to get balls where you want.  I made
-it for a 2-week competition with the theme '80x20 window size'.
+o (release 1): a game where you move a window around to get balls where you
+want.  Created for a 2-week competition with the theme '80x20 window size'.
 
     DEPENDENCIES
 
@@ -16,15 +16,22 @@ X11).  On systems with a sh-compatible shell, do
 
 On other supported systems, run game.py with your Python 2 executable.
 
-For this game to work properly, your window manager must support floating
-windows, allow windows to be as small as 20x20, let you move windows as small
-as this, and let any process move windows.
+For this game to work properly, your window manager/configuration must:
+ - support freely movable floating windows
+ - update windows as they are moved
+ - allow windows to be as small as 40x40
+ - let you move windows as small as 40x40
+
+In addition, you may find it useful to disable (if supported and enabled)
+window snapping (attraction to/resistance against other windows/screen
+borders), if possible.
 
     PLAYING
 
-To play the game, move the window it displays around the screen so that the
-bouncing ball(s) reach their goals.  If a ball is destroyed in any way, you
-must move the window to the indicated position to try again.
+To start, move the game's window to the location indicated by the arrow, so
+that it contains the yellow rectangle.  To play, move the window around the
+screen so that the bouncing ball reaches its goal.  If a ball is destroyed in
+any way, you must move the window back to the yellow rectangle to try again.
 
     LICENSING
 
