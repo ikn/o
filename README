@@ -3,24 +3,34 @@ want.  Created for a 2-week competition with the theme '80x20 window size'.
 
     DEPENDENCIES
 
-Python (2.6 or later 2.x)
-Pygame (1.8 or later, probably; tested with 1.9.1)
+Python (2.6 or later 2.x, 3.2 or later 3.x)
+Pygame (1.8.1 or later, probably; tested with 1.9.1)
 python-xlib (tested with 0.15rc1)
 
     RUNNING
 
-This game only works where Pygame and python-xlib do (meaning you must be using
-X11).  On systems with a sh-compatible shell, do
+This game only works where python-xlib does (meaning you must be using X11).
+
+To run from source, you must first compile.  This process requires GNU Make or
+equivalent or the version of Visual whatever-it's-called that was used to
+compile your Python version, and header files for SDL and Pygame must be
+available on the system.  Just run
+
+    make
+
+The makefile supports a 'PYTHON_VERSION' argument which can be 2 (default) or
+3, which determines which version to build for.
+
+Now, on systems with a sh-compatible shell, do
 
     ./run
-
-On other supported systems, run game.py with your Python 2 executable.
 
 For this game to work properly, your window manager/configuration must:
  - support freely movable floating windows
  - update windows as they are moved
  - allow windows to be as small as 40x40
  - let you move windows as small as 40x40
+ - leave the central 600x400 area of your screen free
 
 In addition, you may find it useful to disable (if supported and enabled)
 window snapping (attraction to/resistance against other windows/screen
@@ -35,6 +45,11 @@ any way, you must move the window back to the yellow rectangle to try again.
 
     LICENSING
 
-Source code is available under the GPL version 3 (included).
+Source code in game/engine/ is available under the LGPL version 3 (included in
+'LICENSE-engine').
 
-Modules in game/ext/ have their own licenses, stated at the top of each file.
+Source code in game/ and not in game/engine/ is available under the GPL version
+3 (included in 'LICENSE').
+
+Source code outside of game/engine is available under the 3-clause BSD license
+(included in 'LICENSE-build').

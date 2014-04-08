@@ -1,0 +1,11 @@
+#! /bin/sh
+
+if [ ! -d bak/ ]; then
+    2to3 *.py game/ > 2to3patch
+    # backup
+    mkdir bak/
+    cp -a *.py game/ bak/
+    # apply patch
+    patch -p0 < 2to3patch
+    rm -rf 2to3patch
+fi

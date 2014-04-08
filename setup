@@ -1,0 +1,18 @@
+#! /bin/sh
+
+if [ -n "$1" ]; then
+    py_ver="$1"
+else
+    py_ver=2
+fi
+
+p=`command -v python$py_ver`
+if [ $? -ne 0 ]; then
+    p=`command -v python`
+    if [ $? -ne 0 ]; then
+        echo "error: cannot find Python $py_ver binary" 1>&2
+        exit 1
+    fi
+fi
+
+"$p" setup.py build

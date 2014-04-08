@@ -1,0 +1,7 @@
+#! /bin/sh
+
+if [ -d bak/ ]; then
+    rm -rf *.py game/
+    cp -a bak/* .
+    rm -rf bak/
+fi

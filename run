@@ -1,15 +1,22 @@
 #! /bin/sh
 
-p=`command -v python2`
+if ! py_ver=$(cat "$(dirname "$0")/py_ver" 2> /dev/null); then
+    echo "missing files; did you remember to \`make'?"
+    exit 1
+fi
+
+p=`command -v python$py_ver`
 if [ $? -ne 0 ]; then
     p=`command -v python`
     if [ $? -ne 0 ]; then
-        echo "error: cannot find Python 2 binary" 1>&2
+        echo "error: cannot find Python $py_ver binary" 1>&2
         exit 1
     fi
 fi
+
 if [ "$1" = "debug" ]; then
-    "$p" "`dirname $0`/game.py" "$@"
+    shift
+    "$p" "`dirname $0`/run.py" "$@" -b
 else
-    "$p" -O "`dirname $0`/game.py" "$@"
+    "$p" -O "`dirname $0`/run.py" "$@"
 fi
