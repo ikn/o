@@ -27,8 +27,6 @@ class Ball (Entity):
         ))[0]
         self.graphic.anchor = 0
         self.vel = list(vel)
-        self.squish_vel = [0] * 4
-        self.squish = [0] * 4
 
     @property
     def rect (self):
@@ -36,7 +34,6 @@ class Ball (Entity):
 
     def push (self, axis, dirn, other_ball):
         v = self.vel
-        self.squish_vel[axis + dirn + 1] += conf.BALL_SQUISH
         if v[axis] and (v[axis] > 0) == (dirn == -1):
             self.world.play_snd('bounce')
         v[axis] = dirn * abs(v[axis])
@@ -48,26 +45,6 @@ class Ball (Entity):
 
     def update_active (self):
         self.graphics.move_by(*self.vel)
-        # squish
-        s = self.squish
-        sv = self.squish_vel
-        e = conf.BALL_ELAST
-        k = conf.BALL_STIFFNESS
-        m = conf.MAX_SQUISH
-        for i in xrange(4):
-            sv[i] *= e
-            sv[i] -= k * s[i]
-            s[i] += sv[i]
-            s[i] = min(s[i], m)
-        # update rect
-        r = list(pg.Rect(self.rect.topleft, conf.BALL_SIZE))
-        for i, dx in enumerate(s):
-            if i < 2:
-                r[i] += dx
-            r[2 + (i % 2)] -= dx
-        r = pg.Rect([util.ir(x) for x in r])
-        self.graphics.pos = r.topleft
-        self.graphic.size = r.size
 
 
 class Rects (Entity):
@@ -83,8 +60,17 @@ class Rects (Entity):
         return [g.rect for g in self.graphics]
 
 
+def update_display ():
+    conf.GAME.refresh_display()
+    return True
+
+
 class Level (World):
     def init (self, ident=0):
+        # update display frequency often - sometimes the pygame display isn't
+        # the actual window size, and this matters here
+        self.scheduler.add_timeout(update_display, .1)
+
         self.ident = ident
         data = conf.LEVELS[ident]
 
@@ -100,6 +86,8 @@ class Level (World):
         self.spikes = Rects(conf.RECT_COLOURS['spikes'], data['spikes'])
 
         # graphics
+        conf.RES_W = data.get('res', conf.DEFAULT_RES)
+        conf.RESIZABLE = data.get('resizable', True)
         gs = self.graphics
         self.bg, self.graphics, self.arrow = gs.add(
             gfx.Colour(conf.SOLID_COLOUR, gs.orig_size, 1),

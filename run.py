@@ -15,6 +15,8 @@ if __name__ == '__main__':
         # got some command-line arguments
         from optparse import OptionParser
         op = OptionParser(prog = 'run')
+        op.add_option('-l', '--level', action = 'store', type = 'int',
+                      dest = 'level', help = 'level to start on', default = 1)
         op.add_option('-b', '--debug', action = 'store_true', dest = 'debug')
         op.add_option('-p', '--profile', action = 'store_true')
         op.add_option('-t', '--time', action = 'store', type = 'float',
@@ -34,6 +36,7 @@ if __name__ == '__main__':
         # debug
         engine.conf.DEBUG = options.debug
         # construct world args
+        args.append(options.level - 1)
         # run game
         if options.profile:
             from cProfile import run

@@ -28,8 +28,8 @@ Now, on systems with a sh-compatible shell, do
 For this game to work properly, your window manager/configuration must:
  - support freely movable floating windows
  - update windows as they are moved
- - allow windows to be as small as 40x40
- - let you move windows as small as 40x40
+ - allow windows to be as small as 30x30
+ - let you move windows as small as 30x30
  - leave the central 600x400 area of your screen free
 
 In addition, you may find it useful to disable (if supported and enabled)
